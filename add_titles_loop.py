@@ -36,6 +36,7 @@ for i in range(0, t_title_count):
     else:
         t_title_list_str = t_title_list_str + "заголовок №" + str(i + 1) + " - " + t_title_list[i] + "; "
 t_title_list_str = t_title_list_str[:-2] + "." # Меняем точку с запятой на точку в конце предложения
+
 # вывод
 print("Cписок заголовков заметки:")
 print(t_title_list_str) # Вывод прилизанной строки заголовков
