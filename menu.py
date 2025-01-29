@@ -76,7 +76,6 @@ def create_note(t_lists, t_list, t_usual_use = True):  # t_lists для сохр
     t_exit_allow = "1"  # Инициализация маркера выхода
     while t_exit_allow == "1":  # Сторожевое условие
         # Ввод данных о заметке
-        print(len(t_lists))
         t_list["1"] = title_unique_input(t_lists)
         t_list["2"] = input("Введите имя пользователя: ")
         t_list["3"] = input("Введите саму заметку: ")
@@ -107,14 +106,29 @@ def create_note(t_lists, t_list, t_usual_use = True):  # t_lists для сохр
 def search_by_any_criterio(t_lists, t_element):
     t_find_lists = []  # Переменная для множественного поиска
 
-    for i in range(0, len(t_lists)):  # Поиск по заданным ключам
-        for j in range(0, len(t_element["Text"])):
-            t_substr = t_element["Text"][j]
-            t_str = str(t_lists[i].values())
-            if t_str.find(t_substr) != -1:  # Проверка совпадения с частью или целым элементом в списке
-                if t_lists[i] not in t_find_lists:  # Проверка, что такой заметки ещё нет в найденном
-                    print(f'Элемент "{t_element["Text"][j]}" присутствует в списке!')
-                    t_find_lists.append(t_lists[i])
+    # Проходим по каждому элементу в t_lists
+    for item in t_lists:
+        for key, text in zip(t_element["Key"], t_element["Text"]): # Итерируемся по парам "Key" и "Text", склеенных zip
+            # Изящный вариант не использован, поскольку теряется возможность сказать, что за подстрока найдена
+            # if any(
+            #             search_text in item.get(key, "")  # Проверка, является ли search_text подстрокой значения по ключу key
+            #             for key, search_text in zip(t_element["Key"], t_element["Text"])  # Итерируемся по парам "Key" и "Text"
+            #     ):
+            # Проверка совпадения ключа подстроки с её кодом и подстроки с частью строки
+            if str(key) in item and text in item[str(key)]:
+                print(f'Поисковая подстрока "{text}" присутствует в списке!')
+                t_find_lists.append(item)
+                break  # Если найдено хотя бы одно совпадение, добавляем элемент и переходим к следующему
+
+    # Мой изначальный код был очень тяжеловесным и сложным
+    # for i in range(0, len(t_lists)):  # Поиск по заданным ключам
+    #     for j in range(0, len(t_element["Text"])):
+    #         t_substr = t_element["Text"][j]
+    #         t_str = str(t_lists[i].values())
+    #         if t_str.find(t_substr) != -1:  # Проверка совпадения с частью или целым элементом в списке
+    #             if t_lists[i] not in t_find_lists:  # Проверка, что такой заметки ещё нет в найденном
+    #                 print(f'Элемент "{t_element["Text"][j]}" присутствует в списке!')
+    #                 t_find_lists.append(t_lists[i])
 
     # Проверка на достижение конца, когда ничего не найдено
     if len(t_find_lists) > 0:
@@ -190,12 +204,12 @@ def find_notes(t_lists):  #
                 t_ask = input(f"По полю '{t_menu_list_by_any_criterio[i]}' искать (нажмите ""1"") или нет (любая другая)?: > ")
                 if t_ask == "1":
                     t_input_string = input(f"Введите текст в поле '{t_menu_list_by_any_criterio[i]}': > ")
-                    t_find_crit["Key"].append(i)
+                    t_find_crit["Key"].append(str(i + 1))  # Нумерация в словаре с 1 и сроками
                     t_find_crit["Text"].append(t_input_string)
-
             if len(t_find_crit["Text"]) == 0:
                 print("Не заданы критерии поиска!")
             else:
+                # print(t_find_crit)
                 t_find_lists = search_by_any_criterio(t_lists, t_find_crit)
         display_notes(t_find_lists)
         if t_find_lists != ():    # Проверка, что какая-то заметка выбрана
@@ -437,15 +451,29 @@ def check_notes_in_list() -> bool:  #
 
 # Функция ввода уникального заголовка
 def title_unique_input(t_lists) -> str:  # Указание на то, что вернётся содержимое поля "Заголовок"
-    t_not_exist_allow = True
-    while t_not_exist_allow:
-        t_not_exist_allow = False
+    while True:
         t_title_name = input("Введите заголовок заметки: ")  # Ввод текста заголовка
-        for i in range(len(t_lists)):
-            if t_lists[i]["1"] == t_title_name:
-                print("Такой заголовок уже есть. Введите другой!")
-                t_not_exist_allow = True
-                break
+        # ТАБЛЕТКА ПАМЯТИ:
+        # print(list(filter(lambda item: any(t_title_name in str(value) for value in item.values()), t_lists)))
+        # Объяснение:
+        # filter() применяет лямбда-функцию к каждому элементу (словарю) списка t_lists.
+        # Лямбда-функция lambda item: any(t_title_name in str(value) for value in item.values())
+        # проверяет, содержится ли подстрока t_title_name в любом из значений словаря item.
+        # any() возвращает True, если хотя бы одно из значений словаря содержит подстроку t_title_name.
+        # Результат фильтрации преобразуется в список с помощью list().
+
+        # ТАБЛЕТКА ПАМЯТИ:
+        # Объяснение:
+        # метод get() позволяет вернуть значение словаря по ключу, если оно существует
+        # item.get("1", "") возвращает значение по ключу "1" из словаря item, или пустую строку, если ключ отсутствует.
+        # t_title_name in ... проверяет, содержится ли t_title_name в этом значении.
+        # any(...) возвращает True, если хотя бы один элемент списка t_lists удовлетворяет условию.
+        # Таким образом, результат будет True, если t_title_name является частью хотя бы одного элемента словаря
+        # с ключом "1" в списке t_lists, и False в противном случае.
+        if any(t_title_name in item.get("1", "") for item in t_lists):
+            print("Такой заголовок уже есть. Введите другой!")
+        else:
+            break
     return t_title_name
 
 
@@ -473,7 +501,7 @@ def save_notes(t_lists):
 
 # Функция выгрузки списка из промежуточного файла notes.txt
 def load_notes():
-    t_list = {"1": [], "2": "", "3": "", "4": "", "5": "", "6": ""}
+    t_list = {"1": "", "2": "", "3": "", "4": "", "5": "", "6": ""}
     t_lists = [t_list]  # Значение списка заметок по умолчанию
     try:
         t_file = open('notes.txt', 'r+')
